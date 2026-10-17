@@ -4,161 +4,74 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Sign in to NewsIntel using Google.">
   <title>Login - NewsIntel</title>
 
-  <link rel="icon" type="image/png"
-        href="{{ url_for('static', filename='sheild.png') }}?v=2">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+  <link rel="icon" href="{{ url_for('static', filename='sheild.png') }}?v=2">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    * { box-sizing: border-box; }
-
     body {
-      margin: 0;
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: grid;
+      place-items: center;
       padding: 20px;
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #eef7f2, #e8f0ff);
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
       color: #0f172a;
     }
-
-    .login-card {
+    .card-login {
       width: 100%;
-      max-width: 420px;
-      padding: 36px;
-      text-align: center;
-      background: rgba(255, 255, 255, .92);
+      max-width: 430px;
+      padding: 32px;
       border: 1px solid #e2e8f0;
       border-radius: 18px;
-      box-shadow: 0 24px 48px rgba(0, 0, 0, .10);
+      background: white;
+      box-shadow: 0 12px 35px #0f172a12;
     }
-
     .google-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
       width: 100%;
-      padding: 12px;
-      border: 1px solid #dbe2ea;
+      padding: 13px;
+      border: 1px solid #cbd5e1;
       border-radius: 9px;
-      background: #fff;
-      color: #334155;
+      background: white;
       font-weight: 600;
-      transition: .2s;
     }
-
-    .google-btn:hover {
-      background: #f8fafc;
-      border-color: #94a3b8;
-    }
-
-    .google-btn:disabled {
-      opacity: .65;
-      cursor: wait;
-    }
-
-    .google-logo {
-      width: 24px;
-      height: 24px;
-    }
-
-    .footer {
-      margin-top: 25px;
-      padding-top: 20px;
-      border-top: 1px solid #e2e8f0;
-      color: #64748b;
-      font-size: .85rem;
-    }
-
-    .footer a {
-      color: #64748b;
-      text-decoration: none;
-      margin: 0 7px;
-    }
-
-    .footer a:hover { color: #2563eb; }
-
-    @media (max-width: 480px) {
-      .login-card { padding: 26px 20px; }
-    }
+    .google-btn:disabled { opacity: .6; }
   </style>
 </head>
 
 <body>
-  <main class="w-100" style="max-width: 420px;">
-    <section class="login-card">
-      <div class="mb-3 text-primary">
-        <svg xmlns="http://www.w3.org/2000/svg"
-             width="48" height="48" fill="currentColor"
-             viewBox="0 0 16 16" aria-hidden="true">
-          <path d="M5.338 1.59a61 61 0 0 0-2.837.856.48.48 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.7 10.7 0 0 0 2.287 2.233c.346.244.652.42.893.533.12.057.218.095.293.118a.55.55 0 0 0 .101.025.6.6 0 0 0 .1-.025c.076-.023.174-.061.294-.118.24-.113.547-.29.893-.533a10.7 10.7 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.855C9.552 1.29 8.531 1.067 8 1.067c-.53 0-1.552.223-2.662.493z"/>
-          <path d="M10.854 5.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 7.793l2.646-2.647a.5.5 0 0 1 .708 0"/>
-        </svg>
-      </div>
+  <main class="card-login">
+    <h1 class="text-primary fw-bold text-center">🛡️ NewsIntel</h1>
+    <p class="text-secondary text-center">
+      Sign in to save and view your personal predictions.
+    </p>
 
-      <h1 class="h2 fw-bold text-primary mb-1">NewsIntel</h1>
-      <p class="text-secondary small mb-4">
-        Sign in to save and view your personal news predictions.
-      </p>
+    <div id="loginError" class="alert alert-danger" hidden></div>
+    <div id="loginStatus" class="alert alert-info" hidden></div>
 
-      <div id="loginError" class="alert alert-danger text-start small"
-           role="alert" hidden></div>
+    <button id="googleLogin" class="google-btn" type="button">
+      Sign in with Google
+    </button>
 
-      <button id="google-login-btn" type="button" class="google-btn">
-        <img class="google-logo"
-             src="https://img.icons8.com/color/48/google-logo.png"
-             alt="">
-        <span id="googleButtonText">Sign in with Google</span>
-      </button>
+    <a href="/" class="btn btn-outline-primary w-100 mt-3">
+      Continue without signing in
+    </a>
 
-      <p class="small text-secondary mt-3 mb-0">
-        You can use NewsIntel's prediction demo without signing in.
-      </p>
-
-      <a href="/" class="btn btn-outline-primary w-100 mt-3">
-        Continue without signing in
-      </a>
-
-      <div class="d-flex justify-content-center gap-3 mt-4 small text-secondary">
-        <span>✓ ML Powered</span>
-        <span>✓ Secure Login</span>
-      </div>
-    </section>
-
-    <footer class="footer text-center">
-      <p class="mb-2">Built with Machine Learning, NLP and Flask</p>
-      <p class="fw-semibold mb-2">© 2026 NewsIntel · Sangam Gupta</p>
-      <div>
-        <a href="https://www.sangamgupta.in/" target="_blank"
-           rel="noopener noreferrer">Portfolio</a>
-        <a href="https://github.com/TheSangamX" target="_blank"
-           rel="noopener noreferrer">GitHub</a>
-        <a href="https://linkedin.com/in/thesangamx" target="_blank"
-           rel="noopener noreferrer">LinkedIn</a>
-      </div>
-    </footer>
+    <p class="text-secondary small text-center mt-4 mb-0">
+      You can use the prediction demo without an account.
+    </p>
   </main>
 
   <script>
     const SUPABASE_URL =
       'https://mpbtxrmzidbagwzwfwgo.supabase.co';
 
-    // Keep your existing Supabase anon/publishable key here.
+    // Replace this with your actual Supabase anon/publishable key.
+    // Use the same key in index.html. Never put the Google Client Secret here.
     const SUPABASE_ANON_KEY =
-      'YOUR_EXISTING_SUPABASE_ANON_KEY';
-
-    const loginButton = document.getElementById('google-login-btn');
-    const buttonText = document.getElementById('googleButtonText');
-    const loginError = document.getElementById('loginError');
+      'YOUR_SUPABASE_ANON_KEY';
 
     const supabaseClient = window.supabase.createClient(
       SUPABASE_URL,
@@ -166,16 +79,21 @@
       {
         auth: {
           flowType: 'pkce',
-          detectSessionInUrl: true,
           persistSession: true,
-          autoRefreshToken: true
+          autoRefreshToken: true,
+          detectSessionInUrl: true
         }
       }
     );
 
-    function showLoginError(message) {
+    const loginButton = document.getElementById('googleLogin');
+    const loginError = document.getElementById('loginError');
+    const loginStatus = document.getElementById('loginStatus');
+
+    function showError(message) {
       loginError.textContent = message;
       loginError.hidden = false;
+      loginStatus.hidden = true;
     }
 
     async function checkSession() {
@@ -190,13 +108,16 @@
         }
       } catch (error) {
         console.error('Session check failed:', error);
+        showError(error.message || 'Could not check login status.');
       }
     }
 
     async function handleGoogleLogin() {
-      loginError.hidden = true;
       loginButton.disabled = true;
-      buttonText.textContent = 'Connecting to Google...';
+      loginButton.textContent = 'Connecting to Google...';
+      loginError.hidden = true;
+      loginStatus.hidden = false;
+      loginStatus.textContent = 'Redirecting to Google sign-in...';
 
       try {
         const { error } =
@@ -210,13 +131,9 @@
         if (error) throw error;
       } catch (error) {
         console.error('Google sign-in failed:', error);
-        showLoginError(
-          'Google sign-in failed: ' +
-          (error.message || 'Please try again.')
-        );
-
+        showError(error.message || 'Google sign-in failed.');
         loginButton.disabled = false;
-        buttonText.textContent = 'Sign in with Google';
+        loginButton.textContent = 'Sign in with Google';
       }
     }
 
