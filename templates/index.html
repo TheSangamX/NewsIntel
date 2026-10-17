@@ -4,20 +4,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Analyze news articles using machine learning and NLP to assess news authenticity.">
-  <title>NewsIntel - NLP-Based News Authenticity Verification</title>
+  <meta name="description" content="Analyze news articles using machine learning and NLP.">
+  <title>NewsIntel - News Authenticity Verification</title>
 
-  <link rel="icon" type="image/png"
-        href="{{ url_for('static', filename='sheild.png') }}?v=2">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+  <link rel="icon" href="{{ url_for('static', filename='sheild.png') }}?v=2">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     :root {
       --blue: #2563eb;
-      --blue-dark: #1d4ed8;
       --muted: #64748b;
       --bg: #f8fafc;
     }
@@ -29,254 +25,187 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      font-family: 'Poppins', sans-serif;
-      color: #0f172a;
+      font-family: Arial, sans-serif;
       background: var(--bg);
+      color: #0f172a;
     }
 
     .navbar {
-      background: #fff;
+      background: white;
       border-bottom: 1px solid #e2e8f0;
     }
 
     .brand {
       color: var(--blue);
+      font-size: 1.4rem;
       font-weight: 700;
-      font-size: 1.5rem;
       text-decoration: none;
     }
 
     .hero {
-      padding: 3rem 0 1.5rem;
+      padding: 40px 0 25px;
       text-align: center;
     }
 
-    .hero h1 {
-      font-weight: 700;
-      letter-spacing: -.6px;
-    }
-
-    .hero p {
-      max-width: 760px;
-      margin: 0 auto;
-      color: var(--muted);
-    }
+    .muted { color: var(--muted); }
 
     .panel {
-      background: #fff;
+      height: 100%;
+      padding: 25px;
+      background: white;
       border: 1px solid #e2e8f0;
       border-radius: 16px;
-      box-shadow: 0 8px 25px rgba(15, 23, 42, .04);
+      box-shadow: 0 8px 25px #0f172a08;
     }
 
-    .form-control {
-      border-color: #dbe2ea;
-      border-radius: 10px;
-      padding: 14px;
-    }
-
-    .form-control:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .12);
+    textarea.form-control {
+      min-height: 190px;
+      resize: vertical;
     }
 
     .btn-primary {
       background: var(--blue);
       border-color: var(--blue);
-      border-radius: 9px;
-    }
-
-    .btn-primary:hover {
-      background: var(--blue-dark);
-      border-color: var(--blue-dark);
     }
 
     .result {
-      display: none;
+      margin-top: 18px;
+      padding: 18px;
       border-radius: 12px;
-      padding: 1rem;
-      margin-top: 1rem;
     }
 
     .result.real {
-      border: 1px solid #86efac;
       background: #f0fdf4;
+      border: 1px solid #86efac;
     }
 
     .result.fake {
-      border: 1px solid #fca5a5;
       background: #fff1f2;
+      border: 1px solid #fca5a5;
     }
 
     .history-item {
       border: 1px solid #e2e8f0;
       border-radius: 10px;
       padding: 12px;
-    }
-
-    .muted { color: var(--muted); }
-
-    .small-label {
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      font-size: .75rem;
-      font-weight: 600;
-      color: var(--muted);
+      overflow-wrap: anywhere;
     }
 
     footer {
       margin-top: auto;
+      padding: 25px 0;
+      text-align: center;
+      background: white;
       border-top: 1px solid #e2e8f0;
-      background: #fff;
-      padding: 24px 0;
     }
 
     footer a {
+      margin: 0 8px;
       color: var(--muted);
       text-decoration: none;
-      margin: 0 10px;
-      font-weight: 500;
-      font-size: .9rem;
-    }
-
-    footer a:hover { color: var(--blue); }
-
-    @media (max-width: 767px) {
-      .hero { padding-top: 2rem; }
-      .hero h1 { font-size: 2.2rem; }
-      .brand { font-size: 1.2rem; }
     }
   </style>
 </head>
 
 <body>
   <nav class="navbar">
-    <div class="container d-flex justify-content-between align-items-center py-2">
+    <div class="container d-flex justify-content-between align-items-center py-3 gap-2">
       <a class="brand" href="/">🛡️ NewsIntel</a>
-
-      <div id="authControls"
-           class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+      <div id="authControls" class="d-flex gap-2 align-items-center flex-wrap">
         <span class="small muted">Demo mode · No login required</span>
-        <a href="/login" class="btn btn-sm btn-outline-primary">
-          Sign in (optional)
-        </a>
+        <a href="/login" class="btn btn-sm btn-outline-primary">Sign in</a>
       </div>
     </div>
   </nav>
 
   <header class="hero container">
-    <h1>NewsIntel</h1>
-    <h5 class="fw-normal muted mt-2">
-      NLP-Based News Authenticity Verification Platform
-    </h5>
-    <p class="mt-3">
-      Analyze news articles using Machine Learning and Natural Language
-      Processing to identify patterns associated with misinformation.
+    <h1 class="fw-bold">NewsIntel</h1>
+    <h5 class="muted">NLP-Based News Authenticity Verification Platform</h5>
+    <p class="muted mt-3">
+      Analyze news articles using Machine Learning and Natural Language Processing.
     </p>
   </header>
 
   <main class="container mb-5">
-    <div class="row g-4 justify-content-center">
+    <div class="row g-4">
       <section class="col-lg-7">
-        <div class="panel p-4 p-md-5">
-          <h5 class="fw-bold mb-2">Verify an article</h5>
-          <p class="small muted mb-4">
-            Paste at least 50 characters from a news article.
-            No account is needed to run a prediction.
+        <div class="panel">
+          <h4 class="fw-bold">Verify an article</h4>
+          <p class="muted">
+            Paste at least 50 characters. No account is required.
           </p>
 
           <form id="predictionForm">
-            <label class="form-label fw-semibold" for="jTextarea">
+            <label for="articleText" class="form-label fw-semibold">
               News article text
             </label>
 
             <textarea
+              id="articleText"
               class="form-control"
-              id="jTextarea"
-              name="text"
-              rows="7"
               maxlength="20000"
               placeholder="Paste the news article here..."
               required
             ></textarea>
 
-            <div class="d-flex justify-content-between mt-2 small muted">
+            <div class="d-flex justify-content-between small muted mt-2">
               <span id="charCount">0 characters</span>
               <span>Minimum 50 characters</span>
             </div>
 
-            <div id="validationFeedback"
-                 class="text-danger small mt-2"
-                 role="alert" hidden>
+            <div id="validationError" class="text-danger small mt-2" hidden>
               Please enter at least 50 characters.
             </div>
 
-            <button id="predictBtn"
-                    class="btn btn-primary w-100 py-3 mt-3 fw-semibold"
-                    type="submit">
+            <button id="predictButton" class="btn btn-primary w-100 mt-3 py-3" type="submit">
               Analyze Article
             </button>
           </form>
 
-          <div id="loading" class="text-center py-4" hidden>
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Analyzing...</span>
-            </div>
-            <p class="small muted mt-2 mb-0">
-              Analyzing text patterns...
-            </p>
+          <div id="loading" class="text-center mt-3" hidden>
+            Analyzing article...
           </div>
 
-          <div id="errorMessage"
-               class="alert alert-danger mt-3"
-               role="alert" hidden></div>
+          <div id="predictionError" class="alert alert-danger mt-3" hidden></div>
 
-          <div id="result" class="result" aria-live="polite" hidden>
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-              <span class="small-label">Model prediction</span>
+          <div id="result" class="result" hidden aria-live="polite">
+            <div class="d-flex justify-content-between align-items-center gap-2">
+              <strong>Model prediction</strong>
               <span id="resultBadge" class="badge fs-6"></span>
             </div>
 
-            <h5 id="resultTitle" class="fw-bold mt-3"></h5>
-            <p id="resultDescription" class="mb-2"></p>
-            <p id="confidenceText" class="small muted mb-0"></p>
+            <h5 id="resultTitle" class="mt-3 fw-bold"></h5>
+            <p id="resultDescription"></p>
+            <p id="confidenceText" class="small muted"></p>
 
-            <p class="small muted mt-3 mb-0">
-              This is a machine-learning prediction, not a guarantee that
-              an article is true or false. Verify important claims with
-              trusted sources.
+            <p class="small muted mb-0">
+              This is a model prediction, not a guarantee of truth or falsehood.
+              Verify important claims with trusted sources.
             </p>
           </div>
         </div>
       </section>
 
-      <aside class="col-lg-4">
-        <div class="panel p-4 h-100">
-          <h5 class="fw-bold mb-1">Recent History</h5>
-          <p class="small muted">
-            Optional: sign in to save your personal predictions.
-          </p>
+      <aside class="col-lg-5">
+        <div class="panel">
+          <h4 class="fw-bold">Recent History</h4>
+          <p class="muted">Sign in optionally to save your personal predictions.</p>
           <hr>
 
           <div id="historyList" class="d-flex flex-column gap-2">
-            <div class="text-center muted py-4">
-              You can use the demo without signing in.
-              Sign in to view your saved history.
-            </div>
+            You can use the demo without signing in.
           </div>
 
-          <a href="/login" id="historyLoginLink"
-             class="btn btn-outline-primary w-100 mt-3">
+          <a href="/login" id="historyLoginLink" class="btn btn-outline-primary w-100 mt-3">
             Sign in to save history
           </a>
         </div>
 
-        <div class="panel p-4 mt-4">
-          <h6 class="fw-bold">How it works</h6>
-          <p class="small muted mb-0">
-            The article text is processed with NLP preprocessing and a
-            trained classification model. Results are indicative and can
-            contain errors or bias.
+        <div class="panel mt-4">
+          <h5 class="fw-bold">How it works</h5>
+          <p class="muted mb-0">
+            NewsIntel uses text preprocessing and a trained classification model.
+            Predictions may contain errors or bias.
           </p>
         </div>
       </aside>
@@ -284,33 +213,19 @@
   </main>
 
   <footer>
-    <div class="container text-center">
-      <div class="small-label mb-2">
-        Built with Machine Learning, NLP and Flask
-      </div>
-      <div class="fw-semibold mb-2">
-        © 2026 NewsIntel · Developed by Sangam Gupta
-      </div>
-      <div>
-        <a href="https://www.sangamgupta.in/" target="_blank"
-           rel="noopener noreferrer">Portfolio</a>
-        <a href="https://github.com/TheSangamX" target="_blank"
-           rel="noopener noreferrer">GitHub</a>
-        <a href="https://linkedin.com/in/thesangamx" target="_blank"
-           rel="noopener noreferrer">LinkedIn</a>
-      </div>
-    </div>
+    <p class="fw-semibold mb-2">© 2026 NewsIntel · Developed by Sangam Gupta</p>
+    <a href="https://www.sangamgupta.in/" target="_blank" rel="noopener noreferrer">Portfolio</a>
+    <a href="https://github.com/TheSangamX" target="_blank" rel="noopener noreferrer">GitHub</a>
+    <a href="https://linkedin.com/in/thesangamx" target="_blank" rel="noopener noreferrer">LinkedIn</a>
   </footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
     const SUPABASE_URL =
       'https://mpbtxrmzidbagwzwfwgo.supabase.co';
 
-    // Use the same existing anon/publishable key as login.html.
+    // Use the same actual anon/publishable key as login.html.
     const SUPABASE_ANON_KEY =
-      'YOUR_EXISTING_SUPABASE_ANON_KEY';
+      'YOUR_SUPABASE_ANON_KEY';
 
     const supabaseClient = window.supabase.createClient(
       SUPABASE_URL,
@@ -318,38 +233,34 @@
       {
         auth: {
           flowType: 'pkce',
-          detectSessionInUrl: true,
           persistSession: true,
-          autoRefreshToken: true
+          autoRefreshToken: true,
+          detectSessionInUrl: true
         }
       }
     );
 
-    let currentUserSession = null;
+    let currentSession = null;
     let authSubscription = null;
 
     const form = document.getElementById('predictionForm');
-    const textarea = document.getElementById('jTextarea');
-    const charCount = document.getElementById('charCount');
-    const predictBtn = document.getElementById('predictBtn');
-    const loading = document.getElementById('loading');
-    const errorMessage = document.getElementById('errorMessage');
+    const textarea = document.getElementById('articleText');
+    const predictButton = document.getElementById('predictButton');
     const result = document.getElementById('result');
-    const validationFeedback = document.getElementById('validationFeedback');
+    const loading = document.getElementById('loading');
+    const predictionError = document.getElementById('predictionError');
 
     textarea.addEventListener('input', () => {
-      charCount.textContent = `${textarea.value.length} characters`;
-      validationFeedback.hidden = textarea.value.trim().length >= 50;
+      document.getElementById('charCount').textContent =
+        `${textarea.value.length} characters`;
+
+      document.getElementById('validationError').hidden =
+        textarea.value.trim().length >= 50;
     });
 
-    function showError(message) {
-      errorMessage.textContent = message;
-      errorMessage.hidden = false;
-    }
-
-    function clearError() {
-      errorMessage.textContent = '';
-      errorMessage.hidden = true;
+    function showPredictionError(message) {
+      predictionError.textContent = message;
+      predictionError.hidden = false;
     }
 
     function renderPrediction(data) {
@@ -363,31 +274,28 @@
 
       result.className = `result ${isReal ? 'real' : 'fake'}`;
       result.hidden = false;
-      result.style.display = 'block';
 
       const badge = document.getElementById('resultBadge');
       badge.className = `badge fs-6 ${isReal ? 'bg-success' : 'bg-danger'}`;
       badge.textContent = prediction;
 
-      document.getElementById('resultTitle').textContent = isReal
-        ? 'Likely authentic according to the model'
-        : 'Potential misinformation indicators detected';
+      document.getElementById('resultTitle').textContent =
+        isReal ? 'Likely authentic according to the model'
+               : 'Potential misinformation indicators detected';
 
-      document.getElementById('resultDescription').textContent = isReal
-        ? 'The model found patterns associated with the REAL class.'
-        : 'The model found patterns associated with the FAKE class.';
+      document.getElementById('resultDescription').textContent =
+        isReal ? 'The model found patterns associated with the REAL class.'
+               : 'The model found patterns associated with the FAKE class.';
 
       document.getElementById('confidenceText').textContent =
-        data.confidence !== undefined && data.confidence !== null
+        data.confidence != null
           ? `Model score: ${data.confidence}% (not a calibrated probability).`
           : '';
-
-      result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     async function loadHistory(userId) {
-      const historyList = document.getElementById('historyList');
-      historyList.textContent = 'Loading history...';
+      const list = document.getElementById('historyList');
+      list.textContent = 'Loading history...';
 
       try {
         const { data, error } = await supabaseClient
@@ -399,10 +307,10 @@
 
         if (error) throw error;
 
-        historyList.replaceChildren();
+        list.replaceChildren();
 
         if (!data || data.length === 0) {
-          historyList.textContent = 'No saved predictions yet.';
+          list.textContent = 'No saved predictions yet.';
           return;
         }
 
@@ -410,13 +318,11 @@
           const card = document.createElement('div');
           card.className = 'history-item';
 
-          const top = document.createElement('div');
-          top.className =
-            'd-flex justify-content-between align-items-center gap-2 mb-2';
+          const heading = document.createElement('div');
+          heading.className = 'd-flex justify-content-between gap-2 mb-2';
 
           const badge = document.createElement('span');
-          badge.className =
-            `badge ${item.prediction === 'REAL' ? 'bg-success' : 'bg-danger'}`;
+          badge.className = `badge ${item.prediction === 'REAL' ? 'bg-success' : 'bg-danger'}`;
           badge.textContent = item.prediction;
 
           const date = document.createElement('small');
@@ -425,35 +331,33 @@
             ? new Date(item.created_at).toLocaleDateString()
             : '';
 
+          heading.append(badge, date);
+
           const snippet = document.createElement('p');
           snippet.className = 'small mb-0';
-
           const content = item.text_content || '';
-          snippet.textContent =
-            content.slice(0, 100) + (content.length > 100 ? '...' : '');
+          snippet.textContent = content.slice(0, 120) +
+            (content.length > 120 ? '...' : '');
 
-          top.append(badge, date);
-          card.append(top, snippet);
-          historyList.appendChild(card);
+          card.append(heading, snippet);
+          list.appendChild(card);
         });
       } catch (error) {
         console.error('History load failed:', error);
-        historyList.textContent =
-          'History is temporarily unavailable. You can still use the public demo.';
+        list.textContent = 'History unavailable. You can still use the demo.';
       }
     }
 
-    async function updateAuthControls() {
+    async function updateAuthUI() {
       const controls = document.getElementById('authControls');
       const historyLoginLink = document.getElementById('historyLoginLink');
 
       controls.replaceChildren();
 
-      if (currentUserSession) {
-        const label = document.createElement('span');
-        label.className = 'small muted';
-        label.textContent =
-          `Signed in: ${currentUserSession.user.email || ''}`;
+      if (currentSession) {
+        const email = document.createElement('span');
+        email.className = 'small muted';
+        email.textContent = `Signed in: ${currentSession.user.email || 'Google user'}`;
 
         const logout = document.createElement('button');
         logout.type = 'button';
@@ -462,163 +366,132 @@
 
         logout.addEventListener('click', async () => {
           logout.disabled = true;
-
           const { error } = await supabaseClient.auth.signOut();
 
           if (error) {
+            console.error('Sign out failed:', error);
             alert('Could not sign out: ' + error.message);
             logout.disabled = false;
-            return;
+          } else {
+            window.location.replace('/');
           }
-
-          window.location.replace('/');
         });
 
-        controls.append(label, logout);
+        controls.append(email, logout);
         historyLoginLink.hidden = true;
-
-        await loadHistory(currentUserSession.user.id);
+        await loadHistory(currentSession.user.id);
       } else {
         const label = document.createElement('span');
         label.className = 'small muted';
         label.textContent = 'Demo mode · No login required';
 
-        const signIn = document.createElement('a');
-        signIn.href = '/login';
-        signIn.className = 'btn btn-sm btn-outline-primary';
-        signIn.textContent = 'Sign in (optional)';
+        const link = document.createElement('a');
+        link.href = '/login';
+        link.className = 'btn btn-sm btn-outline-primary';
+        link.textContent = 'Sign in (optional)';
 
-        controls.append(label, signIn);
+        controls.append(label, link);
         historyLoginLink.hidden = false;
-
         document.getElementById('historyList').textContent =
-          'You can use the demo without signing in. Sign in to view your saved history.';
+          'You can use the demo without signing in. Sign in to view saved history.';
       }
     }
 
     async function initializeAuth() {
       try {
-        // Supabase can process the OAuth callback URL and restore the session.
+        // getSession waits for Supabase's initial auth processing.
         const { data, error } = await supabaseClient.auth.getSession();
 
         if (error) throw error;
 
-        currentUserSession = data?.session || null;
-        await updateAuthControls();
+        currentSession = data.session || null;
+        await updateAuthUI();
 
-        const { data: listenerData } =
-          supabaseClient.auth.onAuthStateChange((_event, session) => {
-            currentUserSession = session || null;
+        const { data: listener } = supabaseClient.auth.onAuthStateChange(
+          (_event, session) => {
+            currentSession = session || null;
 
-            // Run UI updates outside the auth callback to avoid deadlocks.
+            // Avoid awaiting Supabase calls inside the auth callback.
             setTimeout(() => {
-              updateAuthControls().catch(error => {
-                console.error('Auth UI update failed:', error);
-              });
+              updateAuthUI().catch(error =>
+                console.error('Auth UI update failed:', error)
+              );
             }, 0);
-          });
+          }
+        );
 
-        authSubscription = listenerData?.subscription || null;
+        authSubscription = listener.subscription;
       } catch (error) {
         console.error('Auth initialization failed:', error);
-        currentUserSession = null;
-
-        // Keep the public prediction demo usable if auth is unavailable.
-        const controls = document.getElementById('authControls');
-        controls.replaceChildren();
-
-        const label = document.createElement('span');
-        label.className = 'small muted';
-        label.textContent = 'Demo mode · No login required';
-
-        const signIn = document.createElement('a');
-        signIn.href = '/login';
-        signIn.className = 'btn btn-sm btn-outline-primary';
-        signIn.textContent = 'Sign in (optional)';
-
-        controls.append(label, signIn);
-
-        document.getElementById('historyList').textContent =
-          'History is unavailable right now. You can still use the public demo.';
+        currentSession = null;
+        await updateAuthUI();
       }
     }
 
     form.addEventListener('submit', async event => {
       event.preventDefault();
-      clearError();
+      predictionError.hidden = true;
 
       const text = textarea.value.trim();
 
       if (text.length < 50) {
-        validationFeedback.hidden = false;
+        document.getElementById('validationError').hidden = false;
         textarea.focus();
         return;
       }
 
-      validationFeedback.hidden = true;
-      predictBtn.disabled = true;
+      predictButton.disabled = true;
       loading.hidden = false;
-
       result.hidden = true;
-      result.style.display = 'none';
 
       try {
         const response = await fetch('/predict/', {
           method: 'POST',
           headers: {
-            'Content-Type':
-              'application/x-www-form-urlencoded;charset=UTF-8',
+            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
             'Accept': 'application/json'
           },
           body: new URLSearchParams({ text })
         });
 
         const contentType = response.headers.get('content-type') || '';
-
         if (!contentType.includes('application/json')) {
-          throw new Error(
-            `Server returned a non-JSON response (HTTP ${response.status}). Check Flask /predict/.`
-          );
+          throw new Error(`Server returned an unexpected response (HTTP ${response.status}).`);
         }
 
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(
-            data.error || `Prediction request failed (HTTP ${response.status}).`
-          );
+          throw new Error(data.error || `Prediction failed (HTTP ${response.status}).`);
         }
 
-        // Show prediction before attempting to save optional history.
+        // Always show the model result before saving optional history.
         renderPrediction(data);
 
-        if (currentUserSession) {
+        if (currentSession) {
           try {
             const { error } = await supabaseClient
               .from('prediction_history')
               .insert([{
-                user_id: currentUserSession.user.id,
+                user_id: currentSession.user.id,
                 text_content: text,
                 prediction: data.prediction
               }]);
 
             if (error) throw error;
-
-            await loadHistory(currentUserSession.user.id);
-          } catch (historyError) {
-            console.error('History save failed:', historyError);
-            showError(
-              'Prediction completed, but history could not be saved. Your result is shown above.'
+            await loadHistory(currentSession.user.id);
+          } catch (error) {
+            console.error('History save failed:', error);
+            showPredictionError(
+              'Prediction completed, but history could not be saved. Check Supabase table permissions.'
             );
           }
         }
       } catch (error) {
         console.error('Prediction failed:', error);
-        showError(
-          error.message || 'Could not analyze this article. Please try again.'
-        );
+        showPredictionError(error.message || 'Could not analyze this article.');
       } finally {
-        predictBtn.disabled = false;
+        predictButton.disabled = false;
         loading.hidden = true;
       }
     });
